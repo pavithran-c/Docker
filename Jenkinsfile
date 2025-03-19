@@ -9,27 +9,26 @@ pipeline {
     }
 
     stages {
-        
+
         stage('Clone Repository') {
             steps {
                 echo "Cloning GitHub repository..."
-                git branch:'main',url:'https://github.com/pavithran-c/Docker.git'
+                git branch: 'main', url: 'https://github.com/pavithran-c/Docker.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image..."
-                bat 'powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"'
-                bat 'powershell.exe -File .\\Build.ps1'
+                sh 'docker build -t $IMAGE_NAME:$TAG .'
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
                 echo "Logging into Docker Hub..."
-                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
+                withCredentials([usernamePassword(credentialsId: 'ef492499-ea8f-4274-b1cb-b1aadea4cb8f', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
                 }
             }
         }
@@ -37,15 +36,15 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 echo "Pushing Docker image to Docker Hub..."
-                bat "docker tag %IMAGE_NAME%:%TAG% %IMAGE_NAME%:%TAG%"
-                bat "docker push %IMAGE_NAME%:%TAG%"
+                sh 'docker tag $IMAGE_NAME:$TAG $IMAGE_NAME:$TAG'
+                sh 'docker push $IMAGE_NAME:$TAG'
             }
         }
 
         stage('Deploy Docker Container') {
             steps {
                 echo "Deploying Docker container..."
-                bat 'powershell.exe -File .\\Deploy.ps1'
+                sh 'docker run -d -p $PORT:$PORT --name $CONTAINER_NAME $IMAGE_NAME:$TAG'
             }
         }
     }
