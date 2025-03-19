@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-IMAGE_NAME="nadinc/docker"
+IMAGE_NAME="pavithranc/getting_started_with_docker"
 TAG="latest"
 
 # Build Docker image
